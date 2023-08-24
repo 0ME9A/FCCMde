@@ -1,6 +1,6 @@
 "use client";
 
-import { ChangeEvent, LegacyRef, useEffect, useRef, useState } from "react";
+import { ChangeEvent, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { buttonStyle } from "./Button";
 import { remark } from "remark";
