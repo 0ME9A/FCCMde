@@ -10,6 +10,7 @@ import {
   MdArrowBack,
 } from "react-icons/md";
 
+import copyToClipboard from "@/utils/copyToClipboard";
 import html from "remark-html";
 
 export default function MdeEditor({ isScaleFull }: { isScaleFull?: boolean }) {
@@ -21,6 +22,7 @@ export default function MdeEditor({ isScaleFull }: { isScaleFull?: boolean }) {
   const [isScale, setScale] = useState<boolean | undefined>(isScaleFull);
   const [markdown, setMarkdown] = useState<string>("");
   const [resizeX, setResize] = useState<number>(50);
+  const [isCopy, setCopy] = useState(false);
 
   const handleResize = (e: ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(e.target.value, 10); // Parse the value as an integer
@@ -51,6 +53,15 @@ export default function MdeEditor({ isScaleFull }: { isScaleFull?: boolean }) {
 
   const handleTextAreaBlur = () => {
     setTextAreaFocused(false);
+  };
+
+  const handleClipboard = async () => {
+    await copyToClipboard(markdown);
+    setCopy(true);
+
+    setTimeout(() => {
+      setCopy(false);
+    }, 1000);
   };
 
   useEffect(() => {
@@ -137,6 +148,14 @@ export default function MdeEditor({ isScaleFull }: { isScaleFull?: boolean }) {
           className={`h-full absolute left-[-2px] origin-left z-10 bg-slate-950`}
           style={{ width: `${resizeX}%` }}
         >
+          <button
+            className={`p-1 px-2 absolute right-2 top-2 rounded-lg hover:ring-2 hover:ring-green-500/30 text-sm ${
+              isCopy ? "bg-green-500/30" : "bg-green-500/10"
+            }`}
+            onClick={handleClipboard}
+          >
+            {isCopy ? "copied" : "copy"}
+          </button>
           <textarea
             ref={textareaRef}
             className={`w-full h-full text-xs sm:text-sm md:text-base resize-none p-5 bg-transparent focus:outline-none ${
