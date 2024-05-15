@@ -9,7 +9,7 @@ export default function Home() {
       className={`w-full min-h-screen bg-gradient-to-br from-slate-900 to-slate-950  pt-32 pb-10`}
     >
       <Intro />
-      <MdeEditor />
+      <MdeEditor isScaleFull={false} />
       <ContributionSection />
       <Footer />
     </main>
