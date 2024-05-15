@@ -1,24 +1,18 @@
 "use client";
-
 import { ChangeEvent, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { buttonStyle } from "./Button";
-import {
-  MdOutlineZoomOutMap,
-  MdOutlineZoomInMap,
-  MdArrowBack,
-} from "react-icons/md";
-
+import { useDispatch, useSelector } from "react-redux";
+import { focusTab } from "@/RTK/slice/activeTabSlice";
+import { RootState } from "@/RTK/store";
 import Codeblock from "./Codeblock";
+import Nav from "./Nav";
 
-export default function MdeEditor({ isScaleFull }: { isScaleFull?: boolean }) {
-  const route = useRouter();
-
+export default function MdeEditor({ isScaleFull }: { isScaleFull: boolean }) {
   const [isTextAreaFocused, setTextAreaFocused] = useState<boolean>(false);
   const [htmlContent, setHtmlContent] = useState<string>("");
-  const [isScale, setScale] = useState<boolean | undefined>(isScaleFull);
-  const [markdown, setMarkdown] = useState<string>("");
   const [resizeX, setResize] = useState<number>(50);
+  // const activeTabId = useSelector((state: RootState) => state.activeTab);
+  const mdxfiles = useSelector((state: RootState) => state.mdxfiles);
+  const dispatch = useDispatch();
 
   const handleResize = (e: ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(e.target.value, 10); // Parse the value as an integer
@@ -43,7 +37,7 @@ export default function MdeEditor({ isScaleFull }: { isScaleFull?: boolean }) {
 
   useEffect(() => {
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
-      if (markdown.length > 0) {
+      if (mdxfiles.length > 0) {
         event.preventDefault();
         event.returnValue = ""; // Required for Chrome to show the confirmation dialog
       }
@@ -54,53 +48,19 @@ export default function MdeEditor({ isScaleFull }: { isScaleFull?: boolean }) {
     return () => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
-  }, [markdown]); // Depend on markdown length
+  }, [mdxfiles.length]); // Depend on markdown length
+
+  useEffect(() => {
+    if (mdxfiles.length === 1) dispatch(focusTab(mdxfiles[0].id));
+  }, []);
 
   return (
     <section
-      className={`w-[90%] md:w-[80%] aspect-video mx-auto rounded-xl border-2 border-slate-800 shadow-2xl shadow-slate-500/50 relative z-50`}
-      style={isScale ? onScale : {}}
+      className={`w-[90%] md:w-[80%] aspect-video mx-auto rounded-xl border-2 border-slate-800 shadow-2xl shadow-slate-500/50 relative z-50 overflow-hidden`}
+      style={isScaleFull ? onScale : {}}
     >
-      <nav
-        className={`p-1 bg-slate-900 border-b border-slate-800 relative z-40 w-full flex items-center justify-between pr-3 ${
-          isScale ? "rounded-none" : "rounded-t-xl"
-        }`}
-      >
-        <div className="flex items-center gap-1">
-          {isScaleFull && (
-            <button
-              onClick={() => route.back()}
-              className={`${buttonStyle} flex items-center gap-1 !p-1  !bg-slate-800`}
-            >
-              <MdArrowBack />
-            </button>
-          )}
-          <p
-            className={`px-3 p-1 rounded-lg ${
-              isTextAreaFocused && "bg-slate-800"
-            }`}
-          >
-            FCCMde.md
-          </p>
-        </div>
+      <Nav isScaleFull={isScaleFull} />
 
-        {/* editor zoomin - out button */}
-        {!isScaleFull ? (
-          <button
-            className={`opacity-50 hover:opacity-100 group`}
-            onClick={() => setScale((prev) => !prev)}
-            title={isScale ? "Zoom out" : "Zoom in"}
-          >
-            {isScale ? (
-              <MdOutlineZoomInMap className={`group-hover:scale-125`} />
-            ) : (
-              <MdOutlineZoomOutMap className={`group-hover:scale-125`} />
-            )}
-          </button>
-        ) : (
-          ""
-        )}
-      </nav>
       <div className="bg-slate-800 h-full w-full relative overflow-hidden rounded-b-xl">
         {/* Markdown editor panel */}
         <div
@@ -108,12 +68,10 @@ export default function MdeEditor({ isScaleFull }: { isScaleFull?: boolean }) {
           style={{ width: `${resizeX}%` }}
         >
           <Codeblock
-            markdown={markdown}
-            setMarkdown={setMarkdown}
             setHtmlContent={setHtmlContent}
             isTextAreaFocused={isTextAreaFocused}
             setTextAreaFocused={setTextAreaFocused}
-            isScale={isScale}
+            isScaleFull={isScaleFull}
           />
         </div>
 

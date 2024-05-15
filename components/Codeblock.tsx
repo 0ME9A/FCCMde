@@ -8,43 +8,49 @@ import {
   useRef,
   useState,
 } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { editFile } from "@/RTK/slice/mdxfilesSlice";
+import { RootState } from "@/RTK/store";
 import { remark } from "remark";
-import remarkHtml from "remark-html";
-import remarkHighlight from "remark-highlight.js";
 import copyToClipboard from "@/utils/copyToClipboard";
+import remarkHighlight from "remark-highlight.js";
+import remarkHtml from "remark-html";
 import "highlight.js/styles/github-dark.css";
 
 type t_codeblock = {
-  markdown: string;
-  setMarkdown: Dispatch<SetStateAction<string>>;
   setHtmlContent: Dispatch<SetStateAction<string>>;
   isTextAreaFocused: boolean;
   setTextAreaFocused: Dispatch<SetStateAction<boolean>>;
-  isScale: boolean | undefined;
+  isScaleFull: boolean;
 };
 
 function Codeblock({
-  markdown,
-  setMarkdown,
   setHtmlContent,
   isTextAreaFocused,
-  setTextAreaFocused,
-  isScale,
+  isScaleFull,
 }: t_codeblock) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [isCopy, setCopy] = useState(false);
+  const activeTabId = useSelector((state: RootState) => state.activeTab);
+  const mdxfiles = useSelector((state: RootState) => state.mdxfiles);
+  const dispatch = useDispatch();
+
+  const activeTab = mdxfiles.find((item) => item.id === activeTabId);
 
   const handleClipboard = async () => {
-    await copyToClipboard(markdown);
-    setCopy(true);
-
+    if (activeTab?.content) {
+      await copyToClipboard(activeTab?.content);
+      setCopy(true);
+    }
     setTimeout(() => {
       setCopy(false);
     }, 1000);
   };
 
   const handleMarkdownChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
-    setMarkdown(event.target.value);
+    activeTab &&
+      dispatch(editFile({ ...activeTab, content: event.target.value }));
+
     remark()
       .use(remarkHtml)
       .use(remarkHighlight)
@@ -54,33 +60,42 @@ function Codeblock({
       });
   };
 
-  const handleTextAreaFocus = () => {
-    setTextAreaFocused(true);
-  };
-
-  const handleTextAreaBlur = () => {
-    setTextAreaFocused(false);
-  };
-
   useEffect(() => {
-    if (textareaRef.current && isScale) {
+    if (textareaRef.current && isScaleFull) {
       textareaRef.current.focus();
     }
-  }, [isScale]);
+  }, [isScaleFull]);
 
   useEffect(() => {
-    const textarea: HTMLTextAreaElement | null = textareaRef.current;
+    remark()
+      .use(remarkHtml)
+      .use(remarkHighlight)
+      .process(activeTab?.content || "")
+      .then((file) => {
+        setHtmlContent(String(file));
+      });
+  }, [activeTab?.content, activeTabId, setHtmlContent]);
 
-    if (textarea) {
-      textarea.addEventListener("focus", handleTextAreaFocus);
-      textarea.addEventListener("blur", handleTextAreaBlur);
+  // useEffect(() => {
+  //   const handleTextAreaFocus = () => {
+  //     setTextAreaFocused(true);
+  //   };
 
-      return () => {
-        textarea.removeEventListener("focus", handleTextAreaFocus);
-        textarea.removeEventListener("blur", handleTextAreaBlur);
-      };
-    }
-  }, []);
+  //   const handleTextAreaBlur = () => {
+  //     setTextAreaFocused(false);
+  //   };
+  //   const textarea: HTMLTextAreaElement | null = textareaRef.current;
+
+  //   if (textarea) {
+  //     textarea.addEventListener("focus", handleTextAreaFocus);
+  //     textarea.addEventListener("blur", handleTextAreaBlur);
+
+  //     return () => {
+  //       textarea.removeEventListener("focus", handleTextAreaFocus);
+  //       textarea.removeEventListener("blur", handleTextAreaBlur);
+  //     };
+  //   }
+  // }, [setTextAreaFocused]);
 
   return (
     <section className="w-full h-full">
@@ -98,7 +113,7 @@ function Codeblock({
           isTextAreaFocused && "bg-slate-800"
         }`}
         placeholder="Write Markdown here..."
-        value={markdown}
+        value={activeTab?.content}
         onChange={handleMarkdownChange}
       ></textarea>
       <div

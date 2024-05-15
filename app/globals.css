@@ -25,3 +25,15 @@ body {
     )
     rgb(var(--background-start-rgb));
 }
+.cs-1::-webkit-scrollbar {
+  height: 3px;
+}
+.cs-1::-webkit-scrollbar-thumb {
+  border-radius: 1rem;
+  transition: 0.3s;
+  opacity: 0;
+}
+.cs-1:hover::-webkit-scrollbar-thumb {
+  background-color: gray;
+  border-radius: 1rem;
+}
