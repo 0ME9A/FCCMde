@@ -1,20 +1,17 @@
 "use client";
 
-import { ChangeEvent, useEffect, useRef, useState } from "react";
+import { ChangeEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { buttonStyle } from "./Button";
-import { remark } from "remark";
 import {
   MdOutlineZoomOutMap,
   MdOutlineZoomInMap,
   MdArrowBack,
 } from "react-icons/md";
 
-import copyToClipboard from "@/utils/copyToClipboard";
-import html from "remark-html";
+import Codeblock from "./Codeblock";
 
 export default function MdeEditor({ isScaleFull }: { isScaleFull?: boolean }) {
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const route = useRouter();
 
   const [isTextAreaFocused, setTextAreaFocused] = useState<boolean>(false);
@@ -22,7 +19,6 @@ export default function MdeEditor({ isScaleFull }: { isScaleFull?: boolean }) {
   const [isScale, setScale] = useState<boolean | undefined>(isScaleFull);
   const [markdown, setMarkdown] = useState<string>("");
   const [resizeX, setResize] = useState<number>(50);
-  const [isCopy, setCopy] = useState(false);
 
   const handleResize = (e: ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(e.target.value, 10); // Parse the value as an integer
@@ -37,53 +33,6 @@ export default function MdeEditor({ isScaleFull }: { isScaleFull?: boolean }) {
     }
   };
 
-  const handleMarkdownChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
-    setMarkdown(event.target.value);
-    remark()
-      .use(html)
-      .process(event.target.value)
-      .then((file) => {
-        setHtmlContent(String(file));
-      });
-  };
-
-  const handleTextAreaFocus = () => {
-    setTextAreaFocused(true);
-  };
-
-  const handleTextAreaBlur = () => {
-    setTextAreaFocused(false);
-  };
-
-  const handleClipboard = async () => {
-    await copyToClipboard(markdown);
-    setCopy(true);
-
-    setTimeout(() => {
-      setCopy(false);
-    }, 1000);
-  };
-
-  useEffect(() => {
-    if (textareaRef.current && isScale) {
-      textareaRef.current.focus();
-    }
-  }, [isScale]);
-
-  useEffect(() => {
-    const textarea: HTMLTextAreaElement | null = textareaRef.current;
-
-    if (textarea) {
-      textarea.addEventListener("focus", handleTextAreaFocus);
-      textarea.addEventListener("blur", handleTextAreaBlur);
-
-      return () => {
-        textarea.removeEventListener("focus", handleTextAreaFocus);
-        textarea.removeEventListener("blur", handleTextAreaBlur);
-      };
-    }
-  }, []);
-
   const onScale: React.CSSProperties = {
     width: "100%",
     height: "100vh",
@@ -91,6 +40,21 @@ export default function MdeEditor({ isScaleFull }: { isScaleFull?: boolean }) {
     top: 0,
     borderRadius: 0,
   };
+
+  useEffect(() => {
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      if (markdown.length > 0) {
+        event.preventDefault();
+        event.returnValue = ""; // Required for Chrome to show the confirmation dialog
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [markdown]); // Depend on markdown length
 
   return (
     <section
@@ -135,37 +99,23 @@ export default function MdeEditor({ isScaleFull }: { isScaleFull?: boolean }) {
           </button>
         ) : (
           ""
-          // <button
-          //   onClick={() => route.back()}
-          //   className={`${buttonStyle} flex items-center gap-1 !p-1 border-4 hover:border-red-500 hover:scale-125  !bg-red-500`}
-          // >
-          // </button>
         )}
       </nav>
       <div className="bg-slate-800 h-full w-full relative overflow-hidden rounded-b-xl">
         {/* Markdown editor panel */}
-        <section
-          className={`h-full absolute left-[-2px] origin-left z-10 bg-slate-950`}
+        <div
+          className="h-full absolute left-[-2px] origin-left z-10 bg-slate-950"
           style={{ width: `${resizeX}%` }}
         >
-          <button
-            className={`p-1 px-2 absolute right-2 top-2 rounded-lg hover:ring-2 hover:ring-green-500/30 text-sm ${
-              isCopy ? "bg-green-500/30" : "bg-green-500/10"
-            }`}
-            onClick={handleClipboard}
-          >
-            {isCopy ? "copied" : "copy"}
-          </button>
-          <textarea
-            ref={textareaRef}
-            className={`w-full h-full text-xs sm:text-sm md:text-base resize-none p-5 bg-transparent focus:outline-none ${
-              isTextAreaFocused && "bg-slate-800"
-            }`}
-            placeholder="Write Markdown here..."
-            value={markdown}
-            onChange={handleMarkdownChange}
-          ></textarea>
-        </section>
+          <Codeblock
+            markdown={markdown}
+            setMarkdown={setMarkdown}
+            setHtmlContent={setHtmlContent}
+            isTextAreaFocused={isTextAreaFocused}
+            setTextAreaFocused={setTextAreaFocused}
+            isScale={isScale}
+          />
+        </div>
 
         {/* Preview Panel */}
         <section
