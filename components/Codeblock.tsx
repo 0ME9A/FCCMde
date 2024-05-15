@@ -12,9 +12,8 @@ import { editFile } from "@/RTK/slice/mdxfilesSlice";
 import { RootState } from "@/RTK/store";
 import { remark } from "remark";
 import copyToClipboard from "@/utils/copyToClipboard";
-import remarkHighlight from "remark-highlight.js";
+// import remarkHighlight from "remark-highlight.js";
 import remarkHtml from "remark-html";
-import "highlight.js/styles/github-dark.css";
 
 type t_codeblock = {
   setHtmlContent: Dispatch<SetStateAction<string>>;
@@ -52,7 +51,7 @@ function Codeblock({
 
     remark()
       .use(remarkHtml)
-      .use(remarkHighlight)
+      // .use(remarkHighlight)
       .process(event.target.value)
       .then((file) => {
         setHtmlContent(String(file));
@@ -68,33 +67,12 @@ function Codeblock({
   useEffect(() => {
     remark()
       .use(remarkHtml)
-      .use(remarkHighlight)
+      // .use(remarkHighlight)
       .process(activeTab?.content || "")
       .then((file) => {
         setHtmlContent(String(file));
       });
   }, [activeTab?.content, activeTabId, setHtmlContent]);
-
-  // useEffect(() => {
-  //   const handleTextAreaFocus = () => {
-  //     setTextAreaFocused(true);
-  //   };
-
-  //   const handleTextAreaBlur = () => {
-  //     setTextAreaFocused(false);
-  //   };
-  //   const textarea: HTMLTextAreaElement | null = textareaRef.current;
-
-  //   if (textarea) {
-  //     textarea.addEventListener("focus", handleTextAreaFocus);
-  //     textarea.addEventListener("blur", handleTextAreaBlur);
-
-  //     return () => {
-  //       textarea.removeEventListener("focus", handleTextAreaFocus);
-  //       textarea.removeEventListener("blur", handleTextAreaBlur);
-  //     };
-  //   }
-  // }, [setTextAreaFocused]);
 
   return (
     <section className="w-full h-full">
@@ -115,10 +93,6 @@ function Codeblock({
         value={activeTab?.content}
         onChange={handleMarkdownChange}
       ></textarea>
-      <div
-        className="preview mt-4"
-        dangerouslySetInnerHTML={{ __html: setHtmlContent }}
-      ></div>
     </section>
   );
 }
