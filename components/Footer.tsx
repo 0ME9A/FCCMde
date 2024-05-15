@@ -1,5 +1,4 @@
 import { socialLink } from "@/data/social";
-
 import PrimaryLink from "./Link";
 import React from "react";
 

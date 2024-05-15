@@ -1,6 +1,6 @@
 import { configureStore } from "@reduxjs/toolkit";
-import mdxfileReducer from "@/RTK/slice/mdxfilesSlice";
 import activeTabReducer from "@/RTK/slice/activeTabSlice";
+import mdxfileReducer from "@/RTK/slice/mdxfilesSlice";
 
 export const store = configureStore({
   reducer: {
